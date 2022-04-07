@@ -1,0 +1,83 @@
+name: turtlebot4
+version: '0.1'
+summary: Turtlebot4 common packages.
+description: |
+  Turtlebot4 common packages.
+
+grade: devel
+confinement: strict
+base: core20
+
+package-repositories:
+- components: [main]
+  formats: [deb]
+  key-id: C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+  key-server: keyserver.ubuntu.com
+  suites: [focal]
+  type: apt
+  url: http://repo.ros2.org/ubuntu/main
+
+parts:
+  ros2-galactic-extension:
+    build-packages: [ros-galactic-ros-core]
+    override-build: install -D -m 0755 launch ${SNAPCRAFT_PART_INSTALL}/snap/command-chain/ros2-launch
+    plugin: nil
+    source: $SNAPCRAFT_EXTENSIONS_DIR/ros2
+
+  navigation2:
+    after: [ros2-galactic-extension]
+    plugin: colcon
+    source: .
+    build-packages: [git, python3-vcstool]
+    override-pull: |
+            snapcraftctl pull
+            vcs import < navigation2.repositories
+    build-environment:
+    - ROS_VERSION: '2'
+    - ROS_DISTRO: galactic
+
+  ign-ros2-control:
+    after: [navigation2]
+    plugin: colcon
+    source: .
+    build-packages: [git, python3-vcstool, libqt5qml5, libqt5quick5, libqt5quickcontrols2-5]
+    stage-packages: [libqt5qml5, libqt5quick5, libqt5quickcontrols2-5]
+    override-pull: |
+            snapcraftctl pull
+            apt install -y libqt5qml5 libqt5quick5 libqt5quickcontrols2-5
+            vcs import < ign_ros2_control.repositories
+    stage:
+      - -opt/ros/snap/*setup.sh
+    build-environment:
+    - ROS_VERSION: '2'
+    - ROS_DISTRO: galactic
+
+  turtlebot4:
+    after: [ign-ros2-control]
+    plugin: colcon
+    source: .
+    build-packages: [git, python3-vcstool]
+    stage-packages: [ros-galactic-ros2launch]
+    override-pull: |
+            snapcraftctl pull
+            vcs import < tb4.repositories
+            vcs import < turtlebot4/dependencies.repos
+    override-build: |
+            snapcraftctl build
+    stage:
+      - -opt/ros/snap/*setup.sh
+      - -opt/ros/snap/lib/libsensors_lib.so
+      - -usr/bin/xml2-config
+    build-environment:
+    - ROS_VERSION: '2'
+    - ROS_DISTRO: galactic
+
+apps:
+  nav-bringup:
+    command: opt/ros/galactic/bin/ros2 launch turtlebot4_navigation nav_bringup.launch.py # use_sim_time:=true slam:=off localization:=true nav2:=false
+    plugs: [network, network-bind]
+    command-chain: [snap/command-chain/ros2-launch]
+    environment:
+      PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      ROS_DISTRO: galactic
+      ROS_VERSION: '2'
