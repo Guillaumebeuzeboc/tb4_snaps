@@ -36,15 +36,27 @@ parts:
     - ROS_VERSION: '2'
     - ROS_DISTRO: galactic
 
+  desktop-qt5:
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+    source-subdir: qt
+    plugin: make
+    make-parameters: ["FLAVOR=qt5"]
+    build-packages:
+      - build-essential
+      - qtbase5-dev
+      - dpkg-dev
+    stage-packages:
+      - qtbase5-dev
+      - qtdeclarative5-dev
+      - qtquickcontrols2-5-dev
+
   ign-ros2-control:
-    after: [navigation2]
+    after: [navigation2, desktop-qt5]
     plugin: colcon
     source: .
-    build-packages: [git, python3-vcstool, libqt5qml5, libqt5quick5, libqt5quickcontrols2-5]
-    stage-packages: [libqt5qml5, libqt5quick5, libqt5quickcontrols2-5]
+    build-packages: [git, python3-vcstool]
     override-pull: |
             snapcraftctl pull
-            apt install -y libqt5qml5 libqt5quick5 libqt5quickcontrols2-5
             vcs import < ign_ros2_control.repositories
     stage:
       - -opt/ros/snap/*setup.sh
