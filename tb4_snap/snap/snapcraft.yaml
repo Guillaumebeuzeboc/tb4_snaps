@@ -91,5 +91,6 @@ apps:
     command-chain: [snap/command-chain/ros2-launch]
     environment:
       PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack # necessary to load libceres
       ROS_DISTRO: galactic
       ROS_VERSION: '2'
