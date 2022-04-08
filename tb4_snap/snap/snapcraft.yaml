@@ -8,6 +8,10 @@ grade: devel
 confinement: strict
 base: core20
 
+architectures:
+  - build-on: [amd64, arm64]
+    run-on: [amd64, arm64]
+
 package-repositories:
 - components: [main]
   formats: [deb]
