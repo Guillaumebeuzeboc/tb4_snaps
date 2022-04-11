@@ -33,6 +33,7 @@ parts:
     plugin: colcon
     source: .
     colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release"]
+    colcon-packages-ignore: [turtlebot4_snap]
     build-packages: [git, python3-vcstool]
     override-pull: |
             snapcraftctl pull
@@ -60,6 +61,7 @@ parts:
     plugin: colcon
     source: .
     colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release"]
+    colcon-packages-ignore: [turtlebot4_snap]
     build-packages: [git, python3-vcstool]
     override-pull: |
             snapcraftctl pull
@@ -93,7 +95,16 @@ parts:
 
 apps:
   nav-bringup:
-    command: opt/ros/galactic/bin/ros2 launch turtlebot4_navigation nav_bringup.launch.py # use_sim_time:=true slam:=off localization:=true nav2:=false
+    command: opt/ros/galactic/bin/ros2 launch turtlebot4_navigation nav_bringup.launch.py
+    plugs: [network, network-bind]
+    command-chain: [snap/command-chain/ros2-launch]
+    environment:
+      PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack # necessary to load libceres
+      ROS_DISTRO: galactic
+      ROS_VERSION: '2'
+  simulation-pure-localization:
+    command: opt/ros/galactic/bin/ros2 launch turtlebot4_snap simulation_pure_localization.launch.py
     plugs: [network, network-bind]
     command-chain: [snap/command-chain/ros2-launch]
     environment:
