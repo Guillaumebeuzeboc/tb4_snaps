@@ -74,12 +74,14 @@ apps:
       PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
       ROS_DISTRO: galactic
       ROS_VERSION: '2'
+      HOME: $SNAP_USER_COMMON
   rviz2:
     command: bin/desktop-launch $SNAP/opt/ros/galactic/bin/ros2 run rviz2 rviz2
-    plugs: [network, network-bind, desktop, desktop-legacy, x11, opengl, home]
+    plugs: [network, network-bind, desktop, desktop-legacy, x11, opengl, home] # we leave access to home in case we need to access meshes
     command-chain: [snap/command-chain/ros2-launch]
     environment:
       PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
       ROS_DISTRO: galactic
       ROS_VERSION: '2'
       QT_QPA_PLATFORMTHEME: gtk3
+      HOME: $SNAP_USER_COMMON
