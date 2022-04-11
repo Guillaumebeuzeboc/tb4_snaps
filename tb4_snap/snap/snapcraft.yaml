@@ -32,6 +32,7 @@ parts:
     after: [ros2-galactic-extension]
     plugin: colcon
     source: .
+    colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release"]
     build-packages: [git, python3-vcstool]
     override-pull: |
             snapcraftctl pull
@@ -58,6 +59,7 @@ parts:
     after: [navigation2, desktop-qt5]
     plugin: colcon
     source: .
+    colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release"]
     build-packages: [git, python3-vcstool]
     override-pull: |
             snapcraftctl pull
@@ -72,6 +74,7 @@ parts:
     after: [ign-ros2-control]
     plugin: colcon
     source: .
+    colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release"]
     build-packages: [git, python3-vcstool]
     stage-packages: [ros-galactic-ros2launch]
     override-pull: |
