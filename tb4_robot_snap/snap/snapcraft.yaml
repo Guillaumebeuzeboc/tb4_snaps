@@ -1,0 +1,110 @@
+name: turtlebot4-robot
+version: '0.1'
+summary: Turtlebot4 robot packages.
+description: |
+  Turtlebot4 robot packages.
+
+grade: devel
+confinement: strict
+base: core20
+
+architectures:
+  - build-on: [amd64, arm64]
+    run-on: [amd64, arm64]
+
+package-repositories:
+- components: [main]
+  formats: [deb]
+  key-id: C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+  key-server: keyserver.ubuntu.com
+  suites: [focal]
+  type: apt
+  url: http://repo.ros2.org/ubuntu/main
+
+parts:
+  ros2-galactic-extension:
+    build-packages: [ros-galactic-ros-core]
+    override-build: install -D -m 0755 launch ${SNAPCRAFT_PART_INSTALL}/snap/command-chain/ros2-launch
+    plugin: nil
+    source: $SNAPCRAFT_EXTENSIONS_DIR/ros2
+
+    #  depthai:
+    #    plugin: cmake
+    #    build-packages: [libusb-1.0-0-dev, libopencv-dev]
+    #    source: https://github.com/luxonis/depthai-core.git
+    #    source-type: git
+    #    source-branch: main
+    #    #cmake-parameters: ["-DBUILD_SHARED_LIBS=ON", "-DCMAKE_INSTALL_PREFIX=${SNAPCRAFT_PART_INSTALL}/usr/local"]
+    #    cmake-parameters: ["-DBUILD_SHARED_LIBS=ON", "-DCMAKE_INSTALL_PREFIX=/"]
+
+  turtlebot4-robot:
+          #after: [ros2-galactic-extension, depthai]
+    after: [ros2-galactic-extension]
+    plugin: colcon
+    source: .
+    #colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release", "-Ddepthai_DIR=${SNAPCRAFT_STAGE}/usr/lib/cmake/depthai"]
+    #colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_LIBRARY_PATH=$SNAPCRAFT_STAGE/usr/lib"]
+    colcon-catkin-cmake-args: ["-DCMAKE_BUILD_TYPE=Release", "-Ddepthai_DIR=$SNAPCRAFT_STAGE/usr/lib/cmake/depthai"]
+    build-packages: [git, wget, sed, python3-vcstool, libgpiod-dev]
+    stage-packages: [ros-galactic-ros2launch, libgpiod2]
+    override-pull: |
+            snapcraftctl pull
+            vcs import < tb4_robot.repositories
+            vcs import < turtlebot4_robot/dependencies.repos
+            vcs import < turtlebot4/dependencies.repos
+            sed -i "s/TIMEOUT\ 60/TIMEOUT\ 6000/g" luxonis/depthai-ros-examples/depthai_examples/CMakeLists.txt
+            #sh luxonis/depthai-ros/install_dependencies.sh
+            wget https://raw.githubusercontent.com/luxonis/depthai-docs-website/master/source/_static/install_dependencies.sh
+            bash install_dependencies.sh
+            git clone --recursive https://github.com/luxonis/depthai-core.git --branch main
+            cmake -Hdepthai-core -Bdepthai-core/build -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${SNAPCRAFT_STAGE}/usr/local
+            cmake --build depthai-core/build --target install
+    override-build: |
+            snapcraftctl build
+    override-prime: |
+            snapcraftctl prime
+            mkdir -p ${SNAPCRAFT_PRIME}/usr/local/lib/cmake
+            cp ${SNAPCRAFT_STAGE}/usr/local/lib/libdepthai* ${SNAPCRAFT_PRIME}/usr/local/lib/
+            cp -r ${SNAPCRAFT_STAGE}/usr/local/lib/cmake/depthai ${SNAPCRAFT_PRIME}/usr/local/lib/cmake
+    build-environment:
+    - ROS_VERSION: '2'
+    - ROS_DISTRO: galactic
+apps:
+  core:
+    daemon: simple
+    command: opt/ros/galactic/bin/ros2 launch turtlebot4_bringup robot.launch.py
+    plugs: [network, network-bind, gpio, hardware-observe, spi]
+    command-chain: [snap/command-chain/ros2-launch]
+    environment:
+      PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack
+      ROS_DISTRO: galactic
+      ROS_VERSION: '2'
+  teleop:
+    command: opt/ros/galactic/bin/ros2 launch turtlebot4_bringup joy_teleop.launch.py
+    plugs: [network, network-bind, joystick]
+    command-chain: [snap/command-chain/ros2-launch]
+    environment:
+      PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack
+      ROS_DISTRO: galactic
+      ROS_VERSION: '2'
+  mapping:
+    command: opt/ros/galactic/bin/ros2 launch turtlebot4_snap mapping.launch.py
+    plugs: [network, network-bind, serial-port, raw-usb]
+    command-chain: [snap/command-chain/ros2-launch]
+    environment:
+      PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack:${SNAP}/usr/local/lib
+      ROS_DISTRO: galactic
+      ROS_VERSION: '2'
+  navigation:
+    command: opt/ros/galactic/bin/ros2 launch turtlebot4_snap navigation.launch.py
+    plugs: [network, network-bind, serial-port, raw-usb]
+    command-chain: [snap/command-chain/ros2-launch]
+    environment:
+      PYTHONPATH: $SNAP/opt/ros/galactic/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack:${SNAP}/usr/local/lib
+      ROS_DISTRO: galactic
+      ROS_VERSION: '2'
+
