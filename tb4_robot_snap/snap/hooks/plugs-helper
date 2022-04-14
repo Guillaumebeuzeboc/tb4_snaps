@@ -1,0 +1,46 @@
+#!/bin/sh
+RETURN_VAL=0
+if [ "$1" != "gpio" ]; then
+	if ! snapctl is-connected gpio; then
+	  logger -t ${SNAP_NAME} "please run: "
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-2"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-6"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-12"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-13"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-16"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-17"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-18"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-19"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-22"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-23"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-24"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-25"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-26"
+	  logger -t ${SNAP_NAME} "snap connect ${SNAP_NAME}:gpio <gadget>:bcm-gpio-27"
+	  RETURN_VAL=1
+	fi
+fi
+
+if [ "$1" != "hardware-observe" ]; then
+	if ! snapctl is-connected hardware-observe; then
+	  logger -t ${SNAP_NAME} "please run: snap connect ${SNAP_NAME}:hardware-observe"
+	  RETURN_VAL=1
+	fi
+fi
+
+if [ "$1" != "i2c" ]; then
+	if ! snapctl is-connected spi; then
+	  logger -t ${SNAP_NAME} "please run: snap connect ${SNAP_NAME}:spi <gadget>:i2c-3"
+	  RETURN_VAL=1
+	fi
+fi
+
+if [ "$1" != "serial-port" ]; then
+	if ! snapctl is-connected serial-port; then
+	  logger -t ${SNAP_NAME} "please run: snap connect ${SNAP_NAME}:serial-port <gadget>:/dev/RPLIDAR"
+	  RETURN_VAL=1
+	fi
+fi
+
+exit ${RETURN_VAL}
+

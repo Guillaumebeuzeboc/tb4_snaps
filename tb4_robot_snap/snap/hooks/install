@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # we install with the service disabled, the connect hooks for
-# hardware-observe and gpio will start it once both interfaces
+# hardware-observe, gpio, i2c and serial-port will start it once both interfaces
 # are connected
 logger -t ${SNAP_NAME} "Disabling the snap since you need to connect the interfaces"
 snapctl stop --disable ${SNAP_NAME}.core 2>&1 || true

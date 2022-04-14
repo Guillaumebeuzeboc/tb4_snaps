@@ -1,0 +1,29 @@
+#! /bin/sh
+
+# only on core
+if grep -q snap_core /proc/cmdline || grep -q snapd_recovery /proc/cmdline; then
+  # we can only run if both interfaces are porperly connected
+  if ! snapctl is-connected gpio; then
+    exit 0
+  fi
+else
+  logger -t ${SNAP_NAME} "Not on Ubuntu Core ! Please use --devmode to get hardware access"
+fi
+
+${SNAP}/meta/hooks/plugs-helper all
+
+if [ $? -eq 1 ]; then
+    # other interface must be connected
+    exit 0
+fi
+
+# we started originally with disabled service, make sure it is enabled
+# since we are sure defaults are set and interfaces are connected
+if snapctl services ${SNAP_NAME}.core | grep -q inactive; then
+  snapctl start --enable ${SNAP_NAME}.core 2>&1 || true
+  exit 0
+fi
+
+# service was already enabled, just restart it to make sure the new
+# config values are picked up
+snapctl restart ${SNAP_NAME}.core 2>&1 || true
