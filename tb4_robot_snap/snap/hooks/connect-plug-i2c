@@ -1,0 +1,14 @@
+#! /bin/sh
+
+${SNAP}/meta/hooks/plugs-helper i2c
+
+if [ $? -eq 1 ]; then
+    # other interface must be connected
+    exit 0
+fi
+
+# now we can start the service
+if snapctl services ${SNAP_NAME}.core | grep -q inactive; then
+  snapctl start --enable ${SNAP_NAME}.core 2>&1 || true
+fi
+
